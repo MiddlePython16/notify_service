@@ -1,0 +1,146 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.4.9
+    env_file:
+      - ./zookeeper/.env
+    #    ports:
+    #      - 22181:2181
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - backend
+
+  notify_kafka_pipeline:
+    image: confluentinc/cp-kafka:5.4.9
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+      - kafka_logs:/var/lib/kafka/logs
+    #    ports:
+    #      - 29092:29092
+    env_file:
+      - ./kafka/.env
+    networks:
+      - backend
+      - services_network
+
+  kafka_worker:
+    build:
+      context: ./kafka_worker
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - backend
+      - internal_bridge
+
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    env_file:
+      - ./rabbitmq/.env
+    #    ports:
+    #      - 5672:5672
+    #      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq/
+    networks:
+      - backend
+
+  fastapi_notify:
+    build:
+      context: ./fastapi
+    volumes:
+      - fastapi_static:/app/src/static
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - internal_bridge
+      - backend
+      - services_network
+
+  nginx_notify:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - fastapi_static:/data/fastapi_static
+      - nginx_logs:/var/log/nginx/
+    depends_on:
+      - fastapi_notify
+    ports:
+      - 83:83
+    restart: always
+    networks:
+      - internal_bridge
+      - services_network
+
+  filebeat_notify:
+    build:
+      context: ./filebeat
+    volumes:
+      - nginx_logs:/var/log/nginx:ro
+    env_file:
+      - ./filebeat/.env
+    depends_on:
+      - fastapi_notify
+      - nginx_notify
+    networks:
+      - services_network
+
+  mongodb:
+    image: mongo:6.0.1
+    restart: unless-stopped
+    volumes:
+      # optional to preserve database after container is deleted.
+      - mongodb_data:/data/db
+    env_file:
+      - ./mongodb/.env
+    #    ports:
+    #      - 27017:27017
+    networks:
+      - backend
+
+  worker1:
+    build:
+      context: ./worker
+    env_file:
+      - ./worker/.env
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - fastapi_notify
+    networks:
+      - backend
+      - services_network
+
+  scheduler:
+    build:
+      context: ./scheduler
+    env_file:
+      - ./scheduler/.env
+    depends_on:
+      - fastapi_notify
+    networks:
+      - services_network
+      - backend
+
+# Указываем Docker, какие именованные тома потребуются сервисам
+volumes:
+  fastapi_static:
+  nginx_logs:
+  kafka_data:
+  kafka_logs:
+  zookeeper_data:
+  zookeeper_logs:
+  mongodb_data:
+  rabbitmq_data:
+
+
+networks:
+  backend:
+  internal_bridge:
+  services_network:
+    external: true
