@@ -18,8 +18,8 @@ services:
     volumes:
       - kafka_data:/var/lib/kafka/data
       - kafka_logs:/var/lib/kafka/logs
-    #    ports:
-    #      - 29092:29092
+    ports:
+      - 29092:29092
     env_file:
       - ./kafka/.env
     networks:
@@ -71,7 +71,7 @@ services:
     depends_on:
       - fastapi_notify
     ports:
-      - 83:83
+      - 80:80
     restart: always
     networks:
       - internal_bridge
