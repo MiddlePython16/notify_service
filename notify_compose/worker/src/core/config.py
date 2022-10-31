@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     NOTIFICATIONS_COLLECTION: str = 'notifications'
     TEMPLATES_COLLECTION: str = 'templates'
 
-    SENDER_EMAIL: str = 'noreply@film-service.com'
+    SENDER_EMAIL: str = 'error1number404@gmail.com'
     SENDER_NAME: str = 'Super-puper Film-service'
 
     class Config:

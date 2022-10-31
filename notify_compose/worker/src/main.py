@@ -6,11 +6,12 @@ from uuid import UUID
 
 from aio_pika import connect
 from aio_pika.abc import AbstractIncomingMessage
+from mailjet_rest import Client
+from motor.motor_asyncio import AsyncIOMotorClient
+
 from core.config import settings, user
 from db import db
-from mailjet_rest import Client
 from models.models import Notification, NotificationTypeEnum, Template
-from motor.motor_asyncio import AsyncIOMotorClient
 from providers import mailing
 from services.data_scrapper import AsyncScrapper
 from services.mailing import get_mailing_service
@@ -38,7 +39,8 @@ async def on_message(message: AbstractIncomingMessage) -> None:
                                                            uuid=UUID(data['notification_id']))))
         template = Template(**(await db.db.get_one(settings.TEMPLATES_COLLECTION,
                                                    uuid=notification.template_id)))
-        scrapper = AsyncScrapper(items=template.fields, ready_data={"user_id": data['user_id']}, user=user)
+        scrapper = AsyncScrapper(items=template.fields,
+                                 ready_data={"user_id": data['user_id']} | Notification.extra_data, user=user)
         ready_data = await scrapper.get_result()
         ready_template = await Templater.render(item=template, data=ready_data)
 

@@ -23,6 +23,7 @@ class Notification(BaseOrjsonModel):
     user_ids: list[UUID4]
     status: NotificationStatusEnum
     before: datetime = Field(default_factory=datetime.utcnow)
+    extra_data: dict = Field(default_factory=dict)
 
     class Config:
         use_enum_values = True

@@ -38,6 +38,7 @@ class Notification(BaseOrjsonModel):
     status: NotificationStatusEnum
     created_at: datetime = Field(default_factory=datetime.utcnow)
     before: datetime
+    extra_data: dict = Field(default_factory=dict)
 
 
 class TemplateFieldItem(BaseOrjsonModel):

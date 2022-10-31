@@ -42,9 +42,26 @@ class PasswordGenerationTemplate(NotificationTemplate):
         self.user_ids.append(data['user_id'])
 
 
+class SubscriptionAddedEmailTemplate(NotificationTemplate):
+    template_id: UUID4 = settings.SUBSCRIPTION_ADDED_EMAIL_TEMPLATE_UUID
+    priority: int = 10
+    notification_type: NotificationTypeEnum = NotificationTypeEnum.email
+    user_ids: list[UUID4] = Field(default_factory=list)
+    status: NotificationStatusEnum = NotificationStatusEnum.created
+    before: datetime = Field(default_factory=datetime.utcnow)
+
+    def __post_init__(self):
+        self.before = datetime.utcnow() + timedelta(minutes=10)
+
+    async def handle_data_from_topic(self, data: dict) -> None:
+        self.user_ids.append(data['user_id'])
+        self.extra_data['item_name'] = data['item_name']
+
+
 topics_to_notify_template = {
     'email_confirmation':
         EmailConfirmationTemplate,
-    'password_generation': PasswordGenerationTemplate
+    'password_generation': PasswordGenerationTemplate,
+    'subscription_added': SubscriptionAddedEmailTemplate
 
 }

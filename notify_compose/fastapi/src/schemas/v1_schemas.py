@@ -35,3 +35,4 @@ class Notification(BaseModel):
     status: NotificationStatusEnum
     created_at: datetime
     before: datetime
+    extra_data: dict

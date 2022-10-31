@@ -36,6 +36,7 @@ class AddNotification(BaseOrjsonModel):
     user_ids: list[UUID4]
     status: NotificationStatusEnum
     before: datetime
+    extra_data: dict = Field(default_factory=dict)
 
 
 class Notification(BaseOrjsonModel):
@@ -47,6 +48,7 @@ class Notification(BaseOrjsonModel):
     status: NotificationStatusEnum
     created_at: datetime = Field(default_factory=datetime.utcnow)
     before: datetime
+    extra_data: dict = Field(default_factory=dict)
 
 
 class TemplateFieldItem(BaseOrjsonModel):
