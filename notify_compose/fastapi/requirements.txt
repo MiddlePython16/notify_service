@@ -8,5 +8,5 @@ orjson==3.4.1
 PyJWT==2.4.0
 python-dotenv==0.21.0
 python-logstash==0.4.8
-sentry-sdk==1.9.5
+sentry-sdk==1.14.0
 uvicorn==0.18.3
